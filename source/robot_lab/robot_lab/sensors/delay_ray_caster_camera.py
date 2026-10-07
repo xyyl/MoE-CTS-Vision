@@ -9,8 +9,8 @@ from dataclasses import dataclass
 import torch
 import torch.nn.functional as F
 from isaaclab.managers import SceneEntityCfg
-from isaaclab.sensors import RayCasterCameraCfg
-from isaaclab.sensors.ray_caster.ray_caster_camera import RayCasterCamera
+from isaaclab.sensors.ray_caster.multi_mesh_ray_caster_camera import MultiMeshRayCasterCamera
+from isaaclab.sensors.ray_caster.multi_mesh_ray_caster_camera_cfg import MultiMeshRayCasterCameraCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.math import quat_from_euler_xyz, quat_mul
 
@@ -145,13 +145,14 @@ def add_depth_noise(
     return noisy.clamp_(0.0, max_depth)
 
 
-class DelayRayCasterCamera(RayCasterCamera):
-    """RayCasterCamera with delay, optional sensor-level depth processing, and frame history.
+class DelayRayCasterCamera(MultiMeshRayCasterCamera):
+    """Multi-mesh ray-cast camera with delay, sensor-level depth processing, and frame history.
 
-    Pipeline matches a real D435i: capture the current raycast, run noise/ISP on that
-    capture, then expose the processed stream with a per-env transport delay. The policy
-    history stack is skip-sampled from the *delayed* stream (oldest → newest), not from
-    the live capture.
+    ``mesh_prim_paths`` may mix a static ground prim with per-link robot visuals, so the
+    depth image includes the body. Pipeline matches a real D435i: capture the current
+    raycast, run noise/ISP on that capture, then expose the processed stream with a
+    per-env transport delay. The policy history stack is skip-sampled from the *delayed*
+    stream (oldest → newest), not from the live capture.
     """
 
     cfg: "DelayRayCasterCameraCfg"
@@ -568,7 +569,7 @@ class DelayRayCasterCamera(RayCasterCamera):
 
 
 @configclass
-class DelayRayCasterCameraCfg(RayCasterCameraCfg):
+class DelayRayCasterCameraCfg(MultiMeshRayCasterCameraCfg):
     """Configuration for :class:`DelayRayCasterCamera`."""
 
     class_type: type = DelayRayCasterCamera

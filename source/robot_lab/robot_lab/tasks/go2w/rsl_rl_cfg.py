@@ -31,6 +31,11 @@ class Go2WMoeCtsCnnGruActorCriticCfg(RslRlMoeCtsCnnGruActorCriticCfg):
     expert_num = 32
     gating_top_k = None
     gating_noise_std = 1.0
+    # Same ~56.5°×58° window as the 60×60 crop, sampled at 30×30.
+    # Three stride-2 convs take 30→15→8→4, so the pool is 4×4 (GRU input 16).
+    # GRU hidden stays 225 so the MoE input width is unchanged.
+    image_shape = (30, 30)
+    cnn_pooled_shape = (4, 4)
     # Match Go2WD435iSceneCfg.forward_height_scanner (21×25, 0–2 m ahead).
     height_map_shape = (21, 25)
 
@@ -64,6 +69,8 @@ class Go2WMoECTSD435iRunnerCfg(MoECTSD435iRunnerCfg):
         self.policy.expert_num = 32
         self.policy.gating_top_k = None
         self.policy.gating_noise_std = 1.0
+        self.policy.image_shape = (30, 30)
+        self.policy.cnn_pooled_shape = (4, 4)
         self.policy.height_map_shape = (21, 25)
         self.algorithm.router_z_loss_coef = 0.001
         self.algorithm.detach_gate_in_student_surrogate = True

@@ -12,6 +12,7 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
+from isaaclab.sensors.ray_caster import MultiMeshRayCasterCfg
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
@@ -47,10 +48,14 @@ WHEEL_RADIUS = 0.087
 GYRO_BIAS_RANGE = (-0.05, 0.05)
 
 # --- Camera ---
-D435I_DEPTH_WIDTH = 60
-D435I_DEPTH_HEIGHT = 60
-D435I_INTRINSIC_WIDTH = 106
-D435I_INTRINSIC_HEIGHT = 60
+# 30×30 samples the same angular window as the previous 60×60 crop.
+# fx was defined on a 106-wide 87° sensor with a 60-wide center crop; halving both
+# the crop and that reference width (106 → 53, 60 → 30) keeps ~56.5° HFOV.
+# Vertical was uncropped (60 px at 58°), so the reference height scales with the image.
+D435I_DEPTH_WIDTH = 30
+D435I_DEPTH_HEIGHT = 30
+D435I_INTRINSIC_WIDTH = 53
+D435I_INTRINSIC_HEIGHT = 30
 D435I_HORIZONTAL_FOV_DEG = 87.0
 D435I_VERTICAL_FOV_DEG = 58.0
 D435I_FOV_RANDOMIZATION_DEG = 3.0
@@ -211,7 +216,27 @@ class Go2WD435iSceneCfg(Go2WSceneCfg):
             rot=D435I_CAMERA_ROT_BASE,
             convention="world",
         ),
-        mesh_prim_paths=["/World/ground"],
+        # Ground plus visual meshes of the trunk and legs. Fixed links (head, camera
+        # housing) are merged into the base by the URDF importer. Leg links are listed
+        # separately so each target tracks its own rigid body.
+        mesh_prim_paths=[
+            "/World/ground",
+            *[
+                MultiMeshRayCasterCfg.RaycastTargetCfg(
+                    prim_expr=f"{{ENV_REGEX_NS}}/Robot/{link_name}/visuals",
+                    track_mesh_transforms=True,
+                    is_shared=True,
+                    merge_prim_meshes=True,
+                )
+                for link_name in (
+                    "base",
+                    "FL_hip", "FL_thigh", "FL_calf", "FL_foot",
+                    "FR_hip", "FR_thigh", "FR_calf", "FR_foot",
+                    "RL_hip", "RL_thigh", "RL_calf", "RL_foot",
+                    "RR_hip", "RR_thigh", "RR_calf", "RR_foot",
+                )
+            ],
+        ],
         data_types=["distance_to_image_plane"],
         max_distance=D435I_DEPTH_MAX,
         min_delay=D435I_CAMERA_MIN_DELAY,
@@ -532,7 +557,7 @@ class ActionsCfg:
     joint_vel = mdp.JointVelocityActionCfg(
         asset_name="robot",
         joint_names=WHEEL_JOINT_NAMES,
-        scale=1.0,
+        scale=5.0,
         use_default_offset=False,
         clip={".*": (-100.0, 100.0)},
         preserve_order=True,
@@ -1389,7 +1414,7 @@ class Go2WD435iEnvCfg(Go2WEnvCfg):
     use_mgdp_depth_aux: bool = False
     # Body-velocity and per-foot contact estimator concatenated into the actor.
     # False keeps the current actor input (latent + current proprioception only).
-    use_state_estimator: bool = True
+    use_state_estimator: bool = False
     # Runtime noise overrides written by depth_noise_curriculum when aux is on.
     depth_noise_std: float = 0.0
     depth_dropout_prob: float = 0.

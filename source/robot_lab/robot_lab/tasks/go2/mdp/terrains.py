@@ -315,7 +315,7 @@ TERRAIN_CFG = Go2TerrainGeneratorCfg(
     sub_terrains={
         "wave": with_slope_threshold(
             WaveTerrainCfg(
-                proportion=0.15,#0.1,
+                proportion=0.1,#0.1,
             ),
             10.0,  # effectively disable slope correction for wave terrain
         ),

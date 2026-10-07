@@ -38,7 +38,12 @@ def main(env_cfg, agent_cfg):
     zero = torch.zeros(env.unwrapped.num_envs, env.unwrapped.action_manager.total_action_dim, device=env.unwrapped.device)
     for step in range(args_cli.steps):
         obs, *_ = env.step(zero)
-    depth = obs["depth"].reshape(args_cli.num_envs, 60, 60).cpu()
+    depth_flat = obs["depth"]
+    pixels = depth_flat.shape[-1]
+    side = int(pixels**0.5)
+    if side * side != pixels:
+        raise RuntimeError(f"Depth obs length {pixels} is not a square image.")
+    depth = depth_flat.reshape(args_cli.num_envs, side, side).cpu()
     print("\n===== DEPTH OBS =====")
     print(f"global min {depth.min():.4f} max {depth.max():.4f} mean {depth.mean():.4f}")
     print(f"per-image pixel std (mean over envs) {depth.flatten(1).std(1).mean():.4f}")

@@ -5,7 +5,7 @@ from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, R
 class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 300000
-    save_interval = 500
+    save_interval = 5000
     experiment_name = "go2_rough" 
     
     policy = RslRlPpoActorCriticCfg(
@@ -20,7 +20,7 @@ class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
         value_loss_coef=1.0,
         use_clipped_value_loss=True,
         clip_param=0.2,
-        entropy_coef=0.002,
+        entropy_coef=0.005,
         num_learning_epochs=5,
         num_mini_batches=4,
         learning_rate=1.0e-3,
@@ -121,7 +121,7 @@ class RslRlMoeCtsAlgorithmCfg(RslRlPpoAlgorithmCfg):
     use_clipped_value_loss = True
     clip_param = 0.2
     # Ceiling of the std controller. Fixed when adaptive_entropy is False.
-    entropy_coef = 0.001
+    entropy_coef = 0.005
     adaptive_entropy = False
     # Hold mean action std near this value. Inside ±entropy_std_deadband the coef does not move.
     # Outside that band it changes by at most entropy_coef_max_step (2%) per iteration.
@@ -159,7 +159,7 @@ class MoECTSRunnerCfg(RslRlOnPolicyRunnerCfg):
     class_name = "OnPolicyRunnerCTS"
     num_steps_per_env = 24
     max_iterations = 300000
-    save_interval = 500
+    save_interval = 5000
     policy = RslRlMoeCtsActorCriticCfg()
     algorithm = RslRlMoeCtsAlgorithmCfg()
 

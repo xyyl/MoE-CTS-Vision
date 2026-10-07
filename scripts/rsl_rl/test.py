@@ -1,18 +1,15 @@
 import sys
 from datetime import datetime
 
-print(2**100000)
+sys.set_int_max_str_digits(1000000000)
 
-
-
-# Get current date and time
 now = datetime.now()
+t_int = int(now.strftime("%H"))*60*60 + int(now.strftime("%M"))*60 + int(now.strftime("%S"))
 
-# 1. Print formatted time (HH:MM:SS)
-print("Current Time:", now.strftime("%H:%M:%S"))
+num = 2**100000000
+print(num)
 
-# 2. Print formatted 12-hour time with AM/PM
-print("12-Hour Time:", now.strftime("%I:%M:%S %p"))
+now = datetime.now()
+t = int(now.strftime("%H"))*60*60 + int(now.strftime("%M"))*60 + int(now.strftime("%S"))
 
-# 3. Print just the raw time object (includes microseconds)
-print("Raw Time Object:", now.time())
+print("time spent in seconds:", t-t_int)
